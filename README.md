@@ -1,2 +1,2 @@
-# My-Manim-Workflow
-A way to make manim flow charts for my videos
+# Git-Marks
+Project scoped vim marks syncing throughout the cloud
