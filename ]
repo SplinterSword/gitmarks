@@ -1,0 +1,31 @@
+local utils = require("gitmarks.utils")
+
+local M = {}
+
+M.marks = {}
+
+function M.markFile(number)
+	local file = vim.api.nvim_buf_get_name(0)
+
+	if file == nil then
+		vim.notify("File not found in the buffer")
+	end
+
+	local project = utils.get_project(file)
+
+	if project == nil then
+		vim.notify("Not inside a GitHub repository")
+		return
+	end
+
+	if M.marks[project.url] == nil then
+		M.marks[project.url] = {}
+	end
+
+	M.marks[project.url][number] = project.file
+
+	vim.notify("Marked " .. project.file .. " as " .. number)
+	vim.notify(vim.inspect(M.marks))
+end
+
+return M
