@@ -1,5 +1,5 @@
 local utils = require("gitmarks.utils")
-
+local keymaps = require("gitmarks.keymaps")
 local M = {}
 
 M.marks = {}
@@ -26,6 +26,7 @@ function M.markFile(number)
 
 	vim.notify("Marked " .. project.file .. " as " .. number)
 	print(vim.inspect(M.marks))
+	keymaps.createFileBinding(M, number)
 end
 
 function M.openMarkedFile(number)
@@ -56,6 +57,10 @@ function M.openMarkedFile(number)
 	local path = vim.fs.joinpath(root, file)
 
 	vim.cmd.edit(vim.fn.fnameescape(path))
+end
+
+function M.setup()
+	keymaps.setup(M)
 end
 
 return M
