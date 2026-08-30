@@ -1,7 +1,7 @@
 local M = {}
 
 function M.showFiles(lines, numbers, delete_mark, delete_mark_keybinding, open_mark)
-	local width = 50
+	local width = 60
 	local height = #lines
 
 	local buf = vim.api.nvim_create_buf(false, true)
@@ -16,6 +16,12 @@ function M.showFiles(lines, numbers, delete_mark, delete_mark_keybinding, open_m
 		col = math.floor((vim.o.columns - width) / 2),
 		style = "minimal",
 		border = "rounded",
+
+		title = "Gitmarks",
+		title_pos = "center",
+
+		footer = "Enter - Open Mark | d - Delete Mark | q/Esc - Close",
+		footer_pos = "center",
 	})
 
 	-- Close window

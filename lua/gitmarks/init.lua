@@ -101,7 +101,7 @@ function M.openViewTab()
 		local mark = project_marks[i]
 
 		if mark ~= nil then
-			table.insert(lines, i .. " " .. mark)
+			table.insert(lines, i .. " - " .. mark)
 			table.insert(numbers, i)
 		end
 	end
