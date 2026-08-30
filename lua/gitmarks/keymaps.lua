@@ -8,6 +8,10 @@ function M.createFileBinding(gitmarks, number)
 	})
 end
 
+function M.deleteFileBinding(number)
+	vim.keymap.del({ "n", "v" }, "<leader>g" .. number)
+end
+
 function M.setup(gitmarks)
 	vim.keymap.set({ "n", "v" }, "<leader>g", "<Nop>", {
 		desc = "[G]itmarks",

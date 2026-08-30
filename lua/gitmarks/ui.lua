@@ -1,6 +1,6 @@
 local M = {}
 
-function M.showFiles(lines, numbers, delete_mark, open_mark)
+function M.showFiles(lines, numbers, delete_mark, delete_mark_keybinding, open_mark)
 	local width = 50
 	local height = #lines
 
@@ -43,6 +43,7 @@ function M.showFiles(lines, numbers, delete_mark, open_mark)
 		local number = numbers[row]
 
 		delete_mark(number)
+		delete_mark_keybinding(number)
 
 		table.remove(numbers, row)
 		table.remove(lines, row)

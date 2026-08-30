@@ -106,7 +106,7 @@ function M.openViewTab()
 		end
 	end
 
-	ui.showFiles(lines, numbers, M.deleteMark, M.openMarkedFile)
+	ui.showFiles(lines, numbers, M.deleteMark, keymaps.deleteFileBinding, M.openMarkedFile)
 end
 
 function M.setup()
