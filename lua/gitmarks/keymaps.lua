@@ -1,10 +1,10 @@
 local M = {}
 
 function M.createFileBinding(gitmarks, number)
-	vim.keymap.set({ "n", "v" }, "<leader>g" .. number - 1, function()
+	vim.keymap.set({ "n", "v" }, "<leader>g" .. number, function()
 		gitmarks.openMarkedFile(number)
 	end, {
-		desc = "Open Marked file " .. number - 1,
+		desc = "Open Marked file " .. number,
 	})
 end
 
@@ -17,11 +17,17 @@ function M.setup(gitmarks)
 		desc = "[M]ark Current File",
 	})
 
-	for i = 1, 10 do
-		vim.keymap.set({ "n", "v" }, "<leader>gm" .. i - 1, function()
+	vim.keymap.set({ "n", "v" }, "<leader>gl", function()
+		gitmarks.openViewTab()
+	end, {
+		desc = "Open Marked file list",
+	})
+
+	for i = 1, 9 do
+		vim.keymap.set({ "n", "v" }, "<leader>gm" .. i, function()
 			gitmarks.markFile(i)
 		end, {
-			desc = "Mark file to " .. i - 1,
+			desc = "Mark file to " .. i,
 		})
 	end
 end
