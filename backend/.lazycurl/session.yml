@@ -1,0 +1,18 @@
+version: 1
+last_updated: 2026-09-12T15:27:26.923838739+05:30
+active_panel: request
+active_request: req_1789192636663138986_762
+panels:
+    collections:
+        expanded_folders:
+            - col_0
+        scroll_position: 0
+        selected_index: 2
+    request:
+        active_tab: body
+        body_cursor:
+            line: 2
+            column: 7
+    response:
+        active_tab: body
+        scroll_position: 0
