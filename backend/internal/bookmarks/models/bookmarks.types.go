@@ -1,11 +1,14 @@
 package models
 
-type BookmarkCollections struct {
-	Collections map[string][]string `json:"collections"`
+import "go.mongodb.org/mongo-driver/v2/bson"
+
+type Bookmark struct {
+	ID    bson.ObjectID `bson:"_id,omitempty" json:"id"`
+	URL   string        `bson:"url" json:"url"`
+	Files []string      `bson:"files" json:"files"`
 }
 
 type SaveBookmarkRequest struct {
-	URL   string `json:"url"`
-	File  string `json:"file"`
+	URL  string `json:"url"`
+	File string `json:"file"`
 }
-

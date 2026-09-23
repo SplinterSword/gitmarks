@@ -5,9 +5,21 @@ import (
 )
 
 type Storage struct {
-	BookmarkCollections *models.BookmarkCollections `json:"bookmark-collection"`
+	BookmarkCollections *models.BookmarkRepository
+	MongoDB *MongoDB
 }
 
-var GlobalStorage = &Storage {
-	BookmarkCollections: models.NewBookmarkCollections(),
+var GlobalStorage = &Storage{}
+
+func ConnectDatabase() error {
+	mongoDB, err := Connect(GlobalConfig["MONGODB_URI"], GlobalConfig["MONGODB_DATABASE"])
+	
+	if err != nil {
+		return err
+	}
+
+	GlobalStorage.MongoDB = mongoDB
+
+	GlobalStorage.BookmarkCollections = models.NewBookmarkRepository(mongoDB.Database)
+	return nil
 }

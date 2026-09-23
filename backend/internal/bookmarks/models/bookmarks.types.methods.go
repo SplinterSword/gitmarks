@@ -1,51 +1,159 @@
 package models
 
 import (
+	"context"
 	"errors"
-	"slices"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
+type BookmarkRepository struct {
+	collection *mongo.Collection
+}
 
-// Constructor
-func NewBookmarkCollections() *BookmarkCollections {
-	return &BookmarkCollections{
-		Collections: make(map[string][]string),
+func NewBookmarkRepository(db *mongo.Database) *BookmarkRepository {
+	return &BookmarkRepository{
+		collection: db.Collection("bookmarks"),
 	}
 }
 
+// AddFile adds a file to a URL's bookmark document.
+// If the URL doesn't exist, MongoDB creates the document.
+func (r *BookmarkRepository) AddFile(
+	ctx context.Context,
+	url string,
+	file string,
+) error {
 
-// Add Bookmark
-func (b *BookmarkCollections) AddBookmark(collection string, bookmarkID string) {
-	b.Collections[collection] = append(b.Collections[collection], bookmarkID)
-}
-
-// Get Bookmarks
-func (b *BookmarkCollections) GetBookmarks(collection string) []string {
-	return b.Collections[collection]
-}
-
-// Delete bookmark
-func (b *BookmarkCollections) RemoveBookmark(collection string, bookmarkID string) error {
-	bookmarks, found := b.Collections[collection]
-	if found != true {
-		return errors.New("Bookmark Collection not found")
+	filter := bson.M{
+		"url": url,
 	}
 
-	for i, id := range bookmarks{
-		if id == bookmarkID {
-			b.Collections[collection] = append(bookmarks[:i], bookmarks[i+1:]...)
-			return nil
+	update := bson.M{
+		"$addToSet": bson.M{
+			"files": file,
+		},
+	}
+
+	_, err := r.collection.UpdateOne(
+		ctx,
+		filter,
+		update,
+		options.UpdateOne().SetUpsert(true),
+	)
+
+	return err
+}
+
+// GetBookmark returns the bookmark document for a URL.
+func (r *BookmarkRepository) GetBookmark(
+	ctx context.Context,
+	url string,
+) (*Bookmark, error) {
+
+	var bookmark Bookmark
+
+	err := r.collection.FindOne(
+		ctx,
+		bson.M{"url": url},
+	).Decode(&bookmark)
+
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil
 		}
+
+		return nil, err
 	}
 
-	return errors.New("bookmarkID: " + bookmarkID + " not found in the Bookmark Collection")
+	return &bookmark, nil
 }
 
-// Has Bookmark
-func (b *BookmarkCollections) HasBookmark(collection string, bookmarkID string) bool {
-	bookmarks := b.Collections[collection]
+// GetFiles returns all files associated with a URL.
+func (r *BookmarkRepository) GetFiles(
+	ctx context.Context,
+	url string,
+) ([]string, error) {
 
-	found := slices.Contains(bookmarks, bookmarkID)
+	bookmark, err := r.GetBookmark(ctx, url)
 
-	return found
+	if err != nil {
+		return nil, err
+	}
+
+	if bookmark == nil {
+		return []string{}, nil
+	}
+
+	return bookmark.Files, nil
+}
+
+// RemoveFile removes a specific file from a URL.
+func (r *BookmarkRepository) RemoveFile(
+	ctx context.Context,
+	url string,
+	file string,
+) error {
+
+	filter := bson.M{
+		"url": url,
+	}
+
+	update := bson.M{
+		"$pull": bson.M{
+			"files": file,
+		},
+	}
+
+	_, err := r.collection.UpdateOne(
+		ctx,
+		filter,
+		update,
+	)
+
+	return err
+}
+
+// HasFile checks whether a specific file exists for a URL.
+func (r *BookmarkRepository) HasFile(
+	ctx context.Context,
+	url string,
+	file string,
+) (bool, error) {
+
+	filter := bson.M{
+		"url":   url,
+		"files": file,
+	}
+
+	err := r.collection.FindOne(
+		ctx,
+		filter,
+	).Err()
+
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return false, nil
+	}
+
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+// DeleteBookmark removes the entire URL document.
+func (r *BookmarkRepository) DeleteBookmark(
+	ctx context.Context,
+	url string,
+) error {
+
+	_, err := r.collection.DeleteOne(
+		ctx,
+		bson.M{"url": url},
+	)
+
+	return err
 }
