@@ -8,7 +8,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func SaveBookmark(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func SaveBookmarkController(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var schema models.SaveBookmarkRequest
 
 	if err := utils.ReceiveJson(&schema, w, r); err != nil {
@@ -18,8 +18,7 @@ func SaveBookmark(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	url := schema.URL
 	file := schema.File
 
-	bookmarkCollection := models.NewBookmarkCollections()
-	bookmarkCollection.AddBookmark(url, file)
+	utils.GlobalStorage.BookmarkCollections.AddBookmark(url, file)
 
-	utils.SendJson(bookmarkCollection, w, r)
+	utils.SendJson(utils.GlobalStorage.BookmarkCollections, w, r)
 }
