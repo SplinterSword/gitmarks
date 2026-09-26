@@ -15,5 +15,12 @@ func SaveBookmarkController(w http.ResponseWriter, r *http.Request, _ httprouter
 		return
 	}
 
-	utils.SendJson(utils.GlobalStorage.BookmarkCollections, w, r)
+	url := schema.URL
+	file := schema.File
+	mark := schema.Mark
+	context := r.Context()
+
+	SaveBookmark(context, url, file, mark)
+
+	utils.SendJson(utils.GlobalStorage.BookmarkRepository, w, r)
 }

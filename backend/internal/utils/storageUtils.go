@@ -5,7 +5,7 @@ import (
 )
 
 type Storage struct {
-	BookmarkCollections *models.BookmarkRepository
+	BookmarkRepository *models.BookmarkRepository
 	MongoDB *MongoDB
 }
 
@@ -20,6 +20,6 @@ func ConnectDatabase() error {
 
 	GlobalStorage.MongoDB = mongoDB
 
-	GlobalStorage.BookmarkCollections = models.NewBookmarkRepository(mongoDB.Database)
+	GlobalStorage.BookmarkRepository= models.NewBookmarkRepository(mongoDB.Database)
 	return nil
 }
