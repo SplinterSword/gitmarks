@@ -27,7 +27,6 @@ function M.markFile(number)
 
 	vim.notify("Marked " .. project.file .. " as " .. number)
 	keymaps.createFileBinding(M, number)
-	vim.notify(vim.inspect(M.marks))
 end
 
 function M.deleteMark(number)

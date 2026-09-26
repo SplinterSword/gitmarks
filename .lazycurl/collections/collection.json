@@ -25,10 +25,64 @@
       ],
       "body": {
         "type": "JSON",
-        "content": "{\n \"url\": \"github-2.com\",\n \"file\": \"test-3.go\",\n \"mark\": 5\n}\n"
+        "content": "{\n \"url\": \"github-2.com\",\n \"file\": \"test-4.go\",\n \"mark\": 5\n}\n"
       },
       "scripts": {
         "post_request": "// Post-request script\n// Runs after the response is received\n\n"
+      }
+    },
+    {
+      "id": "req_1790402887568372063_693",
+      "name": "DeleteBookmark",
+      "method": "DELETE",
+      "url": "http://localhost:8080/bookmark/delete",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json",
+          "enabled": true
+        },
+        {
+          "key": "Accept",
+          "value": "*/*",
+          "enabled": true
+        },
+        {
+          "key": "User-Agent",
+          "value": "LazyCurl/1.0",
+          "enabled": true
+        }
+      ],
+      "body": {
+        "type": "JSON",
+        "content": "{\n\"url\": \"github-2.com\",\n\"mark\": 5\n}"
+      }
+    },
+    {
+      "id": "req_1790407785165409178_693",
+      "name": "GetBookmarks",
+      "method": "GET",
+      "url": "http://localhost:8080/bookmark/get",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json",
+          "enabled": true
+        },
+        {
+          "key": "Accept",
+          "value": "*/*",
+          "enabled": true
+        },
+        {
+          "key": "User-Agent",
+          "value": "LazyCurl/1.0",
+          "enabled": true
+        }
+      ],
+      "body": {
+        "type": "JSON",
+        "content": "{\n\"url\": \"github-2.com\"\n}"
       }
     }
   ]
