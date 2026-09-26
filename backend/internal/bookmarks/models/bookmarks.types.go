@@ -13,3 +13,30 @@ type SaveBookmarkRequest struct {
 	File string `json:"file"`
 	Mark int `json:"mark"`
 }
+
+type DeleteBookmarkRequest struct {
+	URL  string `json:"url"`
+	Mark int `json:"mark"`
+}
+
+type GetBookmarksRequest struct {
+	URL  string `json:"url"`
+}
+
+type SaveBookmarkResponse struct {
+	Message string `json:"message"`
+	URL  string `json:"url"`
+	File string `json:"file"`
+	Mark int `json:"mark"`
+}
+
+type DeleteBookmarkResponse struct {
+	Message string `json:"message"`
+	URL  string `json:"url"`
+	Mark int `json:"mark"`
+}
+
+type GetBookmarksResponse struct {
+	Message string `json:"message"`
+	Bookmarks map[string]map[int]string `json:"bookmarks"`
+}

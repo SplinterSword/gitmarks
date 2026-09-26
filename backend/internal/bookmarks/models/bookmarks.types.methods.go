@@ -31,7 +31,7 @@ func (r *BookmarkRepository) AddFile(
 		"url": url,
 	}
 
-	field := fmt.Sprintf("mark.%d", mark)
+	field := fmt.Sprintf("marks.%d", mark)
 
 	update := bson.M{
 		"$set": bson.M{
@@ -49,3 +49,55 @@ func (r *BookmarkRepository) AddFile(
 	return err
 }
 
+// DeleteFile deletes a file to a URL's bookmark document.
+// If the URL doesn't exist, MongoDB raises an error.
+func (r *BookmarkRepository) DeleteFile(
+	ctx context.Context,
+	url string,
+	mark int,
+) error {
+	filter := bson.M{
+		"url": url,
+	}
+
+	field := fmt.Sprintf("marks.%d", mark)
+
+	update := bson.M{
+		"$unset": bson.M{
+			field: "",
+		},
+	}
+
+	_, err := r.collection.UpdateOne(
+		ctx,
+		filter,
+		update,
+	)
+
+	return err
+}
+
+// GetFiles get all the files to a URL's bookmark document.
+// If the URL doesn't exist, MongoDB raises an error.
+func (r *BookmarkRepository) GetFiles(
+	ctx context.Context,
+	url string,
+) (map[int]string, error) {
+
+	filter := bson.M{
+		"url": url,
+	}
+
+	var bookmark Bookmark
+
+	err := r.collection.FindOne(
+		ctx,
+		filter,
+	).Decode(&bookmark)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return bookmark.Marks, nil
+}
