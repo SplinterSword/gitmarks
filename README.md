@@ -94,7 +94,9 @@ lua/gitmarks/
   ui.lua      → centered floating list (Enter open, d delete, q/Esc close)
 
 backend/
-  cmd/server/main.go                        → loads .env, connects DB, serves :8080
+  cmd/server/main.go                        → loads .env (optional), connects DB, serves $PORT (default 8080)
+  Dockerfile                                → multi-stage build (golang:1.27-alpine → distroless nonroot, ~22MB)
+  .dockerignore                             → excludes .git, .env, .lazycurl
   internal/bookmarks/bookmarks.routers.go   → 3 routes
   internal/bookmarks/bookmarks.controllers.go
   internal/bookmarks/bookmarks.service.go
@@ -127,16 +129,43 @@ You'll run the backend once (locally or on a server), then install the plugin.
 
 ### 1. Backend
 
-Prereqs: Go 1.27+, a MongoDB URI.
+Prereqs: Go 1.27+ *or* Docker, plus a MongoDB URI.
+
+Env vars (both `go run` and Docker use these — a `.env` file is optional):
+
+| Var | Required | Default | Example |
+|---|---|---|---|
+| `MONGODB_URI` | yes | — | `mongodb+srv://user:pass@cluster0...` |
+| `MONGODB_DATABASE` | yes | — | `gitmarks` |
+| `PORT` | no | `8080` | `8080` |
+
+**Option A — Docker (recommended for teams):**
+
+```bash
+cd backend
+docker build -t gitmarks-backend .
+docker run -d --name gitmarks \
+  -p 8080:8080 \
+  -e MONGODB_URI="mongodb+srv://..." \
+  -e MONGODB_DATABASE="gitmarks" \
+  gitmarks-backend
+docker logs gitmarks  # Server listening on http://localhost:8080
+```
+
+Why this image is small (~22MB): multi-stage build compiles a static binary with `-trimpath -ldflags="-s -w"` on `golang:1.27-alpine`, then copies only the binary into a `distroless/static-debian12:nonroot` runner. `.env` is never baked in — pass secrets with `-e` / `--env-file`.
+
+**Option B — Local Go:**
 
 ```bash
 cd backend
 # create a .env file with:
 # MONGODB_URI=mongodb+srv://...
 # MONGODB_DATABASE=gitmarks
+# PORT=8080  # optional
 
 go mod download
 go run ./cmd/server/main.go
+# No .env file found, using environment variables
 # Server listening on http://localhost:8080
 ```
 
@@ -185,7 +214,7 @@ Typical flow:
 
 - Only numbers `1-9`, only GitHub-style remotes, and you **need** an `origin` remote — no remote, no marks.
 - No auth yet: anyone with your backend URL can read/write marks. Don't expose it publicly as-is.
-- Backend is hardcoded to `:8080` and plugin to `localhost` — fine for local dev, you'll want env config for real team use.
+- Plugin still points at `http://localhost:8080` (`lua/gitmarks/api.lua`) — point it at your Docker host / server URL for team use.
 - `GET /bookmarks/get` uses a JSON body on a GET request, which some proxies/tools dislike. `curl` handles it, browsers may not.
 
 Good next steps would be: auth per team, configurable server URL, and branch-scoped marks.

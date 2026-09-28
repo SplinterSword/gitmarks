@@ -14,11 +14,20 @@ import (
 
 func main() {
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env")
+		log.Println("No .env file found, using environment variables")
 	}
 
 	utils.GlobalConfig["MONGODB_URI"] = os.Getenv("MONGODB_URI")
 	utils.GlobalConfig["MONGODB_DATABASE"] = os.Getenv("MONGODB_DATABASE")
+
+	if utils.GlobalConfig["MONGODB_URI"] == "" || utils.GlobalConfig["MONGODB_DATABASE"] == "" {
+		log.Fatal("MONGODB_URI and MONGODB_DATABASE must be set")
+	}
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 
 	router := httprouter.New()
 
@@ -28,6 +37,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Server listening on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	fmt.Println("Server listening on http://localhost:" + port)
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }

@@ -1,0 +1,20 @@
+# Git history
+.git/
+.gitignore
+
+# Secrets / local env — pass via `docker run -e` instead
+.env
+.env.*
+
+# Dev-only helpers
+.lazycurl/
+*.md
+
+# Docker files themselves
+Dockerfile
+.dockerignore
+
+# Local build / tool caches
+tmp/
+bin/
+out/
