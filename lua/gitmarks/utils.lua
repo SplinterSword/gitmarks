@@ -1,3 +1,5 @@
+local api = require("gitmarks.api")
+
 local M = {}
 
 function M.get_git_root()
@@ -91,6 +93,41 @@ function M.get_directory_details()
 		root = root,
 		remote = remote,
 	}
+end
+
+function M.save(url, file, mark, callback)
+	api.request("POST", "/bookmarks/save", {
+		url = url,
+		file = file,
+		mark = mark,
+	}, callback)
+end
+
+function M.get(url, callback)
+	api.request("GET", "/bookmarks/get", {
+		url = url,
+	}, function(data, err)
+		if err then
+			callback(nil, err)
+			return
+		end
+
+		local marks = data.bookmarks[url] or {}
+		local result = {}
+
+		for mark, file in pairs(marks) do
+			result[tonumber(mark)] = file
+		end
+
+		callback(result, nil)
+	end)
+end
+
+function M.delete(url, mark, callback)
+	api.request("DELETE", "/bookmarks/delete", {
+		url = url,
+		mark = mark,
+	}, callback)
 end
 
 return M

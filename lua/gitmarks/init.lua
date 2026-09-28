@@ -25,6 +25,14 @@ function M.markFile(number)
 
 	M.marks[project.url][number] = project.file
 
+	utils.save(project.url, project.file, number, function(_, err)
+		if err then
+			vim.notify(err, vim.log.levels.ERROR)
+			return
+		end
+		vim.notify("Mark saved to cloud")
+	end)
+
 	vim.notify("Marked " .. project.file .. " as " .. number)
 	keymaps.createFileBinding(M, number)
 end
@@ -44,6 +52,14 @@ function M.deleteMark(number)
 	end
 
 	project_marks[number] = nil
+
+	utils.delete(remote, number, function(_, err)
+		if err then
+			vim.notify(err, vim.log.levels.ERROR)
+			return
+		end
+		vim.notify("Mark deleted")
+	end)
 
 	vim.notify("Deleted mark " .. number)
 end
@@ -111,6 +127,35 @@ end
 
 function M.setup()
 	keymaps.setup(M)
+
+	local dir_details = utils.get_directory_details()
+
+	if dir_details == nil then
+		vim.notify("Error in url fetching", vim.log.levels.ERROR)
+		return
+	end
+
+	local url = dir_details.remote
+
+	utils.get(url, function(marks, err)
+		if err then
+			if err:find("mongo: no documents in result", 1, true) then
+				vim.notify("No marks found for this repo", vim.log.levels.INFO)
+				M.marks[url] = {}
+				return
+			end
+
+			vim.notify(err, vim.log.levels.ERROR)
+			return
+		end
+		M.marks[url] = marks
+
+		for number, _ in pairs(M.marks[url]) do
+			keymaps.createFileBinding(M, number)
+		end
+
+		vim.notify("Marks for the repo retrived successfully")
+	end)
 end
 
 return M
