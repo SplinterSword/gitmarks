@@ -26,7 +26,7 @@ Repo navigation knowledge is lost on every fresh clone — built-in vim marks an
 - Faster onboarding: clone repo, team `1-9` map is already there.
 - Stay in flow: jump directly instead of fuzzy-finding the same files.
 
-## 🚀 Quick Start
+## Quick Start
 
 Prereqs: Neovim 0.10+, git with an `origin` remote, Docker + MongoDB URI.
 
@@ -206,7 +206,7 @@ backend/
   internal/utils/                           → config, Mongo connect, JSON helpers
 ```
 
-## 🤝 Contributing
+## Contributing
 
 ### Clone the repo
 
