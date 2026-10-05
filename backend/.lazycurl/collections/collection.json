@@ -5,7 +5,7 @@
       "id": "req_1788322637190150723_620",
       "name": "New Request",
       "method": "GET",
-      "url": "http://localhost:8080",
+      "url": "http://localhost:34179",
       "headers": [
         {
           "key": "Content-Type",
@@ -28,7 +28,7 @@
       "id": "req_1789192636663138986_762",
       "name": "SaveBookmarks",
       "method": "POST",
-      "url": "http://localhost:8080/bookmark/save",
+      "url": "http://localhost:34179/bookmark/save",
       "headers": [
         {
           "key": "Content-Type",

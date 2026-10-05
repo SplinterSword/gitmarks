@@ -5,7 +5,7 @@
       "id": "req_1790154568531812558_969",
       "name": "SaveBookmarks",
       "method": "POST",
-      "url": "http://localhost:8080/bookmark/save",
+      "url": "http://localhost:34179/bookmark/save",
       "headers": [
         {
           "key": "Content-Type",
@@ -35,7 +35,7 @@
       "id": "req_1790402887568372063_693",
       "name": "DeleteBookmark",
       "method": "DELETE",
-      "url": "http://localhost:8080/bookmark/delete",
+      "url": "http://localhost:34179/bookmark/delete",
       "headers": [
         {
           "key": "Content-Type",
@@ -62,7 +62,7 @@
       "id": "req_1790407785165409178_693",
       "name": "GetBookmarks",
       "method": "GET",
-      "url": "http://localhost:8080/bookmark/get",
+      "url": "http://localhost:34179/bookmark/get",
       "headers": [
         {
           "key": "Content-Type",
@@ -84,6 +84,29 @@
         "type": "JSON",
         "content": "{\n\"url\": \"github-2.com\"\n}"
       }
+    },
+    {
+      "id": "req_1791170905129528985_645",
+      "name": "HealthCheck",
+      "method": "GET",
+      "url": "http://localhost:34179/health",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json",
+          "enabled": true
+        },
+        {
+          "key": "Accept",
+          "value": "*/*",
+          "enabled": true
+        },
+        {
+          "key": "User-Agent",
+          "value": "LazyCurl/1.0",
+          "enabled": true
+        }
+      ]
     }
   ]
 }

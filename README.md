@@ -1,12 +1,15 @@
 # GitMarks
 
-Project-scoped Neovim marks that follow you (and your team) through the cloud.
+GitMarks is a Neovim plugin with a Go + MongoDB backend for pinning files to keys `1-9` and sharing them across every clone of a repo.
 
-You know that feeling? You mark the important files in a repo — API entrypoint, tricky utils, that one config everyone forgets — and then you switch laptops, or your teammate clones the same repo, and... all of it is gone. GitMarks fixes that.
+![GitMarks demo](docs/demo.gif)
+<!-- Replace docs/demo.gif with real recording: <leader>gm3 save, <leader>g3 jump, <leader>gl list -->
 
 ---
 
 ## What is this?
+
+You know that feeling? You mark the important files in a repo — API entrypoint, tricky utils, that one config everyone forgets — and then you switch laptops, or your teammate clones the same repo, and... all of it is gone. GitMarks fixes that.
 
 GitMarks is two small pieces that work together:
 
@@ -17,19 +20,120 @@ The trick is simple: instead of keying marks by your local machine, GitMarks key
 
 Think Harpoon, but shared.
 
-## Why does this exist?
+## Motivation
 
-Built-in vim marks (`mA`, `` `A ``) and plugins like Harpoon are great, but they're **local-only**:
+Repo navigation knowledge is lost on every fresh clone — built-in vim marks and Harpoon are local-only, so teams re-find the same entrypoints and re-explain the layout for each new machine and teammate.
 
-- New machine? Start over.
-- Teammate joins? You have to Slack them "hey open src/x, then src/y...".
-- Pairing / onboarding? No shared map of "where the important stuff lives".
+- Shared context: marks keyed by git `origin` URL + relative paths, not local state.
+- Faster onboarding: clone repo, team `1-9` map is already there.
+- Stay in flow: jump directly instead of fuzzy-finding the same files.
 
-GitMarks treats the important-files list as team knowledge, not editor state:
+## 🚀 Quick Start
 
-- Onboard faster: clone repo → open Neovim → your team's `1-9` map is already there.
-- Stay in flow: `<leader>g3` jumps to the file, no fuzzy-finding the same 5 paths.
-- One source of truth: mark it once, everyone sees it.
+Prereqs: Neovim 0.10+, git with an `origin` remote, Docker + MongoDB URI.
+
+### 1. Clone the repo
+
+```bash
+git clone https://github.com/SplinterSword/gitmarks
+cd gitmarks
+```
+
+### 2. Start the backend
+
+```bash
+cd backend
+docker build -t gitmarks-backend .
+docker run -d --name gitmarks \
+  --restart unless-stopped \
+  -p 34179:34179 \
+  -e MONGODB_URI="mongodb+srv://..." \
+  -e MONGODB_DATABASE="gitmarks" \
+  gitmarks-backend
+```
+
+Stays up across login/reboot. If stopped, restart with `docker start gitmarks`.
+
+### 3. Install the plugin
+
+```lua
+local plugin_path = vim.fn.expand 'Location of The Clone Repo'
+
+vim.opt.rtp:prepend(plugin_path)
+
+local gitmarks = require 'gitmarks'
+
+gitmarks.setup()
+```
+
+### 4. Mark and jump
+
+- `<leader>gm1` — mark current file as `1`
+- `<leader>g1` — jump to mark `1`
+- `<leader>gl` — list this repo's marks
+
+See `## How to run it` below for local Go setup, server URL config, and daily use.
+
+## Usage
+
+Available keymaps (normal + visual):
+
+- `<leader>gm1` … `<leader>gm9` — mark current file as `1-9`, saves to cloud and creates the jump binding
+- `<leader>g1` … `<leader>g9` — jump to marked file for the current repo
+- `<leader>gl` — open floating list for the current repo
+
+Floating list (`Enter` / `d` / `q`):
+
+- `Enter` — open selected file
+- `d` — delete mark locally and in the cloud
+- `q` / `Esc` — close
+
+Behavior notes:
+
+- Marks are scoped by normalized git `origin` URL and stored as relative paths (`root + relpath` on jump).
+- Valid marks are `1-9`; re-marking a number overwrites it.
+- `setup()` pulls the repo map on startup and creates `<leader>g<n>` bindings for existing marks.
+
+## Examples
+
+Mark the current file as `3` and jump back to it:
+
+```vim
+" open src/handlers/auth.go, then:
+<leader>gm3
+" later, from anywhere in the same repo:
+<leader>g3
+```
+
+Browse and manage marks:
+
+```vim
+<leader>gl
+" Enter - open | d - delete | q/Esc - close
+```
+
+Available API endpoints:
+
+- `POST /bookmarks/save` — body `{url, file, mark}`
+- `GET /bookmarks/get` — body `{url}`
+- `DELETE /bookmarks/delete` — body `{url, mark}`
+
+```bash
+# Save mark 3
+curl -X POST http://localhost:34179/bookmarks/save \
+  -H 'Content-Type: application/json' \
+  -d '{"url":"https://github.com/you/my-api","file":"src/handlers/auth.go","mark":3}'
+
+# Get all marks for a repo
+curl -X GET http://localhost:34179/bookmarks/get \
+  -H 'Content-Type: application/json' \
+  -d '{"url":"https://github.com/you/my-api"}'
+
+# Delete mark 3
+curl -X DELETE http://localhost:34179/bookmarks/delete \
+  -H 'Content-Type: application/json' \
+  -d '{"url":"https://github.com/you/my-api","mark":3}'
+```
 
 ## How it works
 
@@ -37,7 +141,7 @@ GitMarks treats the important-files list as team knowledge, not editor state:
 
 ```mermaid
 flowchart LR
-  A[Neovim<br/>lua/gitmarks/] -- "JSON over curl<br/>POST/GET/DELETE" --> B[Go API :8080<br/>httprouter]
+  A[Neovim<br/>lua/gitmarks/] -- "JSON over curl<br/>POST/GET/DELETE" --> B[Go API :34179<br/>httprouter]
   B --> C[(MongoDB<br/>bookmarks collection)]
   A -- "reads git locally" --> D{{"git -C root<br/>remote get-url origin"}}
   style C fill:#e8f5e9,stroke:#333
@@ -89,12 +193,12 @@ Jumping itself is fully local after that: `root + relative_path` → `:edit`.
 lua/gitmarks/
   init.lua    → markFile(), openMarkedFile(), deleteMark(), openViewTab(), setup()
   utils.lua   → git root/remote detection, save/get/delete wrappers
-  api.lua     → tiny curl JSON client (BASE_URL = http://localhost:8080)
+  api.lua     → tiny curl JSON client (BASE_URL = http://localhost:34179)
   keymaps.lua → <leader>gm1-9, <leader>g1-9, <leader>gl
   ui.lua      → centered floating list (Enter open, d delete, q/Esc close)
 
 backend/
-  cmd/server/main.go                        → loads .env (optional), connects DB, serves $PORT (default 8080)
+  cmd/server/main.go                        → loads .env (optional), connects DB, serves $PORT (default 34179)
   Dockerfile                                → multi-stage build (golang:1.27-alpine → distroless nonroot, ~22MB)
   .dockerignore                             → excludes .git, .env, .lazycurl
   internal/bookmarks/bookmarks.routers.go   → 3 routes
@@ -104,123 +208,48 @@ backend/
   internal/utils/                           → config, Mongo connect, JSON helpers
 ```
 
-### Data + API
+## 🤝 Contributing
 
-One Mongo document per repo:
+### Clone the repo
 
-```json
-{
-  "url": "https://github.com/you/my-api",
-  "marks": { "1": "README.md", "3": "src/handlers/auth.go" }
-}
+```bash
+git clone https://github.com/SplinterSword/gitmarks
+cd gitmarks
 ```
 
-| Method | Endpoint | Body | What it does |
-|---|---|---|---|
-| `POST` | `/bookmarks/save` | `{url, file, mark}` | Upserts `marks.<n>` |
-| `GET` | `/bookmarks/get` | `{url}` | Returns all marks for repo |
-| `DELETE` | `/bookmarks/delete` | `{url, mark}` | `$unset`s `marks.<n>` |
-
----
-
-## How to run it
-
-You'll run the backend once (locally or on a server), then install the plugin.
-
-### 1. Backend
-
-Prereqs: Go 1.27+ *or* Docker, plus a MongoDB URI.
-
-Env vars (both `go run` and Docker use these — a `.env` file is optional):
-
-| Var | Required | Default | Example |
-|---|---|---|---|
-| `MONGODB_URI` | yes | — | `mongodb+srv://user:pass@cluster0...` |
-| `MONGODB_DATABASE` | yes | — | `gitmarks` |
-| `PORT` | no | `8080` | `8080` |
-
-**Option A — Docker (recommended for teams):**
+### Backend local dev
 
 ```bash
 cd backend
-docker build -t gitmarks-backend .
-docker run -d --name gitmarks \
-  -p 8080:8080 \
-  -e MONGODB_URI="mongodb+srv://..." \
-  -e MONGODB_DATABASE="gitmarks" \
-  gitmarks-backend
-docker logs gitmarks  # Server listening on http://localhost:8080
-```
-
-Why this image is small (~22MB): multi-stage build compiles a static binary with `-trimpath -ldflags="-s -w"` on `golang:1.27-alpine`, then copies only the binary into a `distroless/static-debian12:nonroot` runner. `.env` is never baked in — pass secrets with `-e` / `--env-file`.
-
-**Option B — Local Go:**
-
-```bash
-cd backend
-# create a .env file with:
-# MONGODB_URI=mongodb+srv://...
-# MONGODB_DATABASE=gitmarks
-# PORT=8080  # optional
-
+cp .env.example .env  # fill in MONGODB_URI / MONGODB_DATABASE, PORT optional
 go mod download
 go run ./cmd/server/main.go
-# No .env file found, using environment variables
-# Server listening on http://localhost:8080
 ```
 
-> If your plugin and backend are on different machines, change `BASE_URL` in `lua/gitmarks/api.lua` from `http://localhost:8080` to your server URL.
+### Plugin local dev
 
-### 2. Neovim plugin
-
-With `lazy.nvim`:
+Point `lazy.nvim` at your checkout and exercise it in a repo with an `origin` remote:
 
 ```lua
-{
-  "SplinterSword/gitmarks",
-  config = function()
-    require("gitmarks").setup()
-  end,
-}
+local plugin_path = vim.fn.expand 'Location of The Clone Repo'
+
+vim.opt.rtp:prepend(plugin_path)
+
+local gitmarks = require 'gitmarks'
+
+gitmarks.setup()
 ```
 
-`setup()` fetches this repo's marks from the cloud immediately and creates jump keymaps for any marks it finds. If the repo has never been marked, you'll just see "No marks found for this repo" — totally fine, you're the first.
+Then test `<leader>gm1` / `<leader>g1` / `<leader>gl`. Keep the plugin dependency-free (curl + stock Neovim APIs).
 
-Requirements: Neovim 0.10+ (uses `vim.system` + `vim.fs`), git, `curl`, and an `origin` remote.
+### Run checks
 
-### 3. Daily use
+```bash
+cd backend
+go vet ./...
+go test ./...
+```
 
-| Keys | Action |
-|---|---|
-| `<leader>gm1` … `<leader>gm9` | Mark current file as 1-9 (saves to cloud) |
-| `<leader>g1` … `<leader>g9` | Jump to marked file |
-| `<leader>gl` | Open floating list of this repo's marks |
+### Submit a pull request
 
-Inside the list (`lua/gitmarks/ui.lua`):
-
-- `Enter` — open that file
-- `d` — delete mark (local + cloud)
-- `q` / `Esc` — close
-
-Typical flow:
-
-1. Open `src/handlers/auth.go`, hit `<leader>gm3` → "Mark saved to cloud".
-2. Teammate opens same repo → `setup()` already pulled mark `3`.
-3. Either of you hits `<leader>g3` or `<leader>gl` → `Enter`.
-
----
-
-## Current limits (honest version)
-
-- Only numbers `1-9`, only GitHub-style remotes, and you **need** an `origin` remote — no remote, no marks.
-- No auth yet: anyone with your backend URL can read/write marks. Don't expose it publicly as-is.
-- Plugin still points at `http://localhost:8080` (`lua/gitmarks/api.lua`) — point it at your Docker host / server URL for team use.
-- `GET /bookmarks/get` uses a JSON body on a GET request, which some proxies/tools dislike. `curl` handles it, browsers may not.
-
-Good next steps would be: auth per team, configurable server URL, and branch-scoped marks.
-
----
-
-## Contributing
-
-PRs welcome. Easiest wins right now: making `BASE_URL` configurable, adding auth, and handling non-GitHub remotes. Just keep the plugin dependency-free (curl + stock Neovim APIs) if you can.
+Fork the repo and open a PR to `main`.

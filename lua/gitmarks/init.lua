@@ -128,33 +128,40 @@ end
 function M.setup()
 	keymaps.setup(M)
 
-	local dir_details = utils.get_directory_details()
-
-	if dir_details == nil then
-		vim.notify("Error in url fetching", vim.log.levels.ERROR)
-		return
-	end
-
-	local url = dir_details.remote
-
-	utils.get(url, function(marks, err)
+	utils.health(function(_, err)
 		if err then
-			if err:find("mongo: no documents in result", 1, true) then
-				vim.notify("No marks found for this repo", vim.log.levels.INFO)
-				M.marks[url] = {}
-				return
-			end
-
-			vim.notify(err, vim.log.levels.ERROR)
+			vim.notify("GitMarks backend down — run `docker start gitmarks`", vim.log.levels.ERROR)
 			return
 		end
-		M.marks[url] = marks
 
-		for number, _ in pairs(M.marks[url]) do
-			keymaps.createFileBinding(M, number)
+		local dir_details = utils.get_directory_details()
+
+		if dir_details == nil then
+			vim.notify("Error in url fetching", vim.log.levels.ERROR)
+			return
 		end
 
-		vim.notify("Marks for the repo retrived successfully")
+		local url = dir_details.remote
+
+		utils.get(url, function(marks, err)
+			if err then
+				if err:find("mongo: no documents in result", 1, true) then
+					vim.notify("No marks found for this repo", vim.log.levels.INFO)
+					M.marks[url] = {}
+					return
+				end
+
+				vim.notify(err, vim.log.levels.ERROR)
+				return
+			end
+			M.marks[url] = marks
+
+			for number, _ in pairs(M.marks[url]) do
+				keymaps.createFileBinding(M, number)
+			end
+
+			vim.notify("Marks for the repo retrived successfully")
+		end)
 	end)
 end
 

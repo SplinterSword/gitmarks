@@ -1,6 +1,6 @@
 local M = {}
 
-local BASE_URL = "http://localhost:8080"
+local BASE_URL = "http://localhost:34179"
 
 function M.request(method, endpoint, body, callback)
 	local args = {

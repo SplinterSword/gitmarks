@@ -21,7 +21,7 @@ FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /app
 COPY --from=builder /out/server /app/server
 
-EXPOSE 8080
-ENV PORT=8080
+EXPOSE 34179
+ENV PORT=34179
 USER nonroot:nonroot
 ENTRYPOINT ["/app/server"]

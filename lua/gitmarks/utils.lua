@@ -130,4 +130,8 @@ function M.delete(url, mark, callback)
 	}, callback)
 end
 
+function M.health(callback)
+	api.request("GET", "/health", nil, callback)
+end
+
 return M

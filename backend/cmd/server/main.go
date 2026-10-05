@@ -26,12 +26,14 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "34179"
 	}
 
 	router := httprouter.New()
 
 	bookmarks.RegisterRoutes(router)
+
+	router.GET("/health", utils.HealthCheck)
 
 	if err := utils.ConnectDatabase(); err != nil {
 		log.Fatal(err)
