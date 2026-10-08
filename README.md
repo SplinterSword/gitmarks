@@ -2,8 +2,8 @@
 
 GitMarks is a Neovim plugin with a Go + MongoDB backend for pinning files to keys `1-9` and sharing them across every clone of a repo.
 
-![GitMarks demo](docs/demo.gif)
-<!-- Replace docs/demo.gif with real recording: <leader>gm3 save, <leader>g3 jump, <leader>gl list -->
+https://github.com/user-attachments/assets/2a39b8fd-ca9c-46ea-bec4-2e29cd945872
+
 
 ## What is this?
 
