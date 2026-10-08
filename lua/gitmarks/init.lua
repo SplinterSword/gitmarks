@@ -154,6 +154,12 @@ function M.setup()
 				vim.notify(err, vim.log.levels.ERROR)
 				return
 			end
+
+			if vim.tbl_isempty(marks) then
+				vim.notify("No marks found for this repo", vim.log.levels.INFO)
+				return
+			end
+
 			M.marks[url] = marks
 
 			for number, _ in pairs(M.marks[url]) do
